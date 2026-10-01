@@ -63,7 +63,8 @@ time, so a change requires a new build.
   second terminal run `npx cypress open`.
 
 A pre-commit hook (Husky and lint-staged) runs ESLint and Prettier on staged
-files. CI runs lint, typecheck, unit tests and build on each pull request.
+files. CI runs two parallel jobs on each pull request: `verify` (lint,
+typecheck, unit tests, build) and `e2e` (Cypress against the static build).
 
 ## Project structure
 
