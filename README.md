@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Template
 
-## Getting Started
+A minimal starter for static sites: Next.js (App Router), TypeScript (strict),
+Tailwind CSS, Vitest, Cypress and GitHub Actions. The build is a static export,
+so any static host can serve it. This README covers Cloudflare Pages.
 
-First, run the development server:
+It deliberately has no i18n, auth, database or UI library.
 
-```bash
+## Use this template
+
+On GitHub, click **Use this template** to create a new repository. (To turn
+your own copy into a template: **Settings > General > Template repository**.)
+
+Then update the site name and description in `src/app/layout.tsx`, and replace
+`src/app/icon.svg` and `src/app/opengraph-image.png`.
+
+## Requirements
+
+- Node.js 24 (see `.nvmrc`; with nvm, run `nvm use`)
+- npm
+
+## Run locally
+
+```sh
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable               | Required | Description                                          |
+| ---------------------- | -------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL` | Yes      | Public URL of the site, used for SEO and the sitemap |
 
-## Learn More
+`src/lib/env.ts` validates the variables with Zod. If a value is missing or
+invalid, the build fails with a clear message. The values are inlined at build
+time, so a change requires a new build.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Script               | What it does                                       |
+| -------------------- | -------------------------------------------------- |
+| `npm run dev`        | Start the dev server                               |
+| `npm run build`      | Build the static site to `out/`                    |
+| `npm start`          | Serve `out/` on port 3000 (run `build` first)      |
+| `npm run lint`       | Run ESLint                                         |
+| `npm run typecheck`  | Run the TypeScript compiler without output         |
+| `npm test`           | Run unit tests with Vitest                         |
+| `npm run test:watch` | Run Vitest in watch mode                           |
+| `npm run test:e2e`   | Build, serve `out/` and run the Cypress smoke test |
+| `npm run format`     | Format all files with Prettier                     |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Test
 
-## Deploy on Vercel
+- **Unit and component tests:** Vitest and Testing Library. Put a test file
+  next to the code it tests, named `*.test.ts(x)`. Run `npm test`.
+- **End-to-end tests:** Cypress in `cypress/e2e/`. `npm run test:e2e` runs the
+  tests against the production build, which is the same output that is
+  deployed. To debug in the browser, run `npm run build && npm start`, and in a
+  second terminal run `npx cypress open`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+A pre-commit hook (Husky and lint-staged) runs ESLint and Prettier on staged
+files. CI runs lint, typecheck, unit tests and build on each pull request.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project structure
+
+```
+src/
+  app/          Routes, layout, metadata, tokens.css, icon, OG image, sitemap, robots
+  components/   Reusable UI components and their tests
+  lib/          Logic without UI (env validation, helpers)
+cypress/e2e/    End-to-end tests
+.github/        CI workflow, Dependabot, PR and issue templates
+```
+
+### Theming
+
+`src/app/tokens.css` defines colors as CSS variables for light and dark mode.
+Dark mode follows the operating system setting (`prefers-color-scheme`).
+`globals.css` maps the variables to Tailwind utilities such as `bg-bg`,
+`text-fg` and `bg-accent`. Use these utilities instead of hard-coded colors.
+
+## Deploy to Cloudflare Pages
+
+1. Push the repository to GitHub.
+2. In the Cloudflare dashboard, go to **Workers & Pages > Create > Pages >
+   Connect to Git**, and select the repository.
+3. Set the build settings:
+   - **Framework preset:** None
+   - **Build command:** `npm run build`
+   - **Build output directory:** `out`
+4. Under **Environment variables**, add `NEXT_PUBLIC_SITE_URL` with your
+   production URL (for example `https://my-site.pages.dev`).
+5. Click **Save and Deploy**.
+
+Cloudflare reads the Node.js version from `.nvmrc`. Each push to `main`
+deploys to production. Each pull request gets a preview URL.
+
+Notes:
+
+- Do not use the `@cloudflare/next-on-pages` adapter. This site is plain
+  static files and needs no adapter.
+- Cloudflare serves `out/about.html` at `/about`, so routes work without
+  `trailingSlash`.
+- Features that need a server (API routes, middleware, server actions, ISR,
+  default image optimization) do not work with a static export.
