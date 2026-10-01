@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "serve out -l 3000",
     "lint": "eslint .",
+    "lint:secrets": "secretlint \"**/*\"",
     "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p cypress",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -22,6 +23,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.6",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
@@ -40,6 +42,7 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "secretlint": "^13.0.6",
     "serve": "^14.2.6",
     "start-server-and-test": "^3.0.12",
     "tailwindcss": "^4",
@@ -50,6 +53,7 @@
     "node": ">=24"
   },
   "lint-staged": {
+    "*": "secretlint",
     "*.{js,mjs,cjs,ts,tsx,mts}": [
       "eslint --fix",
       "prettier --write"

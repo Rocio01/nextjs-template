@@ -8,6 +8,7 @@ Run these commands and confirm that they pass:
 
 ```sh
 npm run lint
+npm run lint:secrets
 npm run typecheck
 npm test
 npm run build

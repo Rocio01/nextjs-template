@@ -41,17 +41,18 @@ time, so a change requires a new build.
 
 ## Scripts
 
-| Script               | What it does                                       |
-| -------------------- | -------------------------------------------------- |
-| `npm run dev`        | Start the dev server                               |
-| `npm run build`      | Build the static site to `out/`                    |
-| `npm start`          | Serve `out/` on port 3000 (run `build` first)      |
-| `npm run lint`       | Run ESLint                                         |
-| `npm run typecheck`  | Run the TypeScript compiler without output         |
-| `npm test`           | Run unit tests with Vitest                         |
-| `npm run test:watch` | Run Vitest in watch mode                           |
-| `npm run test:e2e`   | Build, serve `out/` and run the Cypress smoke test |
-| `npm run format`     | Format all files with Prettier                     |
+| Script                 | What it does                                       |
+| ---------------------- | -------------------------------------------------- |
+| `npm run dev`          | Start the dev server                               |
+| `npm run build`        | Build the static site to `out/`                    |
+| `npm start`            | Serve `out/` on port 3000 (run `build` first)      |
+| `npm run lint`         | Run ESLint                                         |
+| `npm run lint:secrets` | Scan files for leaked secrets with secretlint      |
+| `npm run typecheck`    | Run the TypeScript compiler without output         |
+| `npm test`             | Run unit tests with Vitest                         |
+| `npm run test:watch`   | Run Vitest in watch mode                           |
+| `npm run test:e2e`     | Build, serve `out/` and run the Cypress smoke test |
+| `npm run format`       | Format all files with Prettier                     |
 
 ## Test
 
@@ -62,9 +63,10 @@ time, so a change requires a new build.
   deployed. To debug in the browser, run `npm run build && npm start`, and in a
   second terminal run `npx cypress open`.
 
-A pre-commit hook (Husky and lint-staged) runs ESLint and Prettier on staged
-files. CI runs two parallel jobs on each pull request: `verify` (lint,
-typecheck, unit tests, build) and `e2e` (Cypress against the static build).
+A pre-commit hook (Husky and lint-staged) runs secretlint, ESLint and
+Prettier on staged files. CI runs two parallel jobs on each pull request:
+`verify` (lint, secret scan, typecheck, unit tests, build) and `e2e` (Cypress
+against the static build).
 
 ## Project structure
 
@@ -108,3 +110,18 @@ Notes:
   `trailingSlash`.
 - Features that need a server (API routes, middleware, server actions, ISR,
   default image optimization) do not work with a static export.
+
+## Secrets
+
+Never commit secrets. Put them in `.env.local`, which is gitignored.
+
+- **secretlint** blocks a commit that contains a known secret format (API
+  keys, tokens, private keys). CI runs the same scan on every pull request.
+  It ignores `.env*` files except `.env.example`.
+- **GitHub secret scanning and push protection** reject a push with a known
+  secret. They are free for public repositories. Private repositories need
+  GitHub Secret Protection (paid), so secretlint is the free layer that
+  always runs.
+
+If a secret reaches a commit, rotate it first (the old value is compromised),
+then remove it from the history.
